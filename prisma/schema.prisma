@@ -1,0 +1,190 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  SALES
+  INVENTORY
+  PURCHASE
+}
+
+enum InventoryMovementType {
+  IN
+  OUT
+}
+
+enum InvoiceStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole
+  storeId      String?  @map("store_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  store Store? @relation(fields: [storeId], references: [id])
+
+  @@map("users")
+}
+
+model Store {
+  id        String   @id @default(uuid())
+  name      String
+  region    String
+  city      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users         User[]
+  inventory     Inventory[]
+  invoices      Invoice[]
+  movements     InventoryMovement[]
+
+  @@map("stores")
+}
+
+model Manufacturer {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  brands   Brand[]
+  products Product[]
+
+  @@map("manufacturers")
+}
+
+model Brand {
+  id             String       @id @default(uuid())
+  name           String
+  manufacturerId String       @map("manufacturer_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id])
+  products     Product[]
+
+  @@unique([name, manufacturerId])
+  @@map("brands")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  parentId  String?  @map("parent_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id             String    @id @default(uuid())
+  sku            String    @unique
+  name           String
+  categoryId     String    @map("category_id")
+  brandId        String    @map("brand_id")
+  manufacturerId String    @map("manufacturer_id")
+  unitPrice      Decimal   @map("unit_price") @db.Decimal(10, 2)
+  unitSizeMl     Int?      @map("unit_size_ml")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  category     Category            @relation(fields: [categoryId], references: [id])
+  brand        Brand               @relation(fields: [brandId], references: [id])
+  manufacturer Manufacturer        @relation(fields: [manufacturerId], references: [id])
+  inventory    Inventory[]
+  invoiceItems InvoiceItem[]
+  movements    InventoryMovement[]
+
+  @@map("products")
+}
+
+model Inventory {
+  storeId    String   @map("store_id")
+  productId  String   @map("product_id")
+  qtyOnHand  Int      @map("qty_on_hand") @default(0)
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  store   Store   @relation(fields: [storeId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([storeId, productId])
+  @@map("inventory")
+}
+
+model InventoryMovement {
+  id        String                @id @default(uuid())
+  storeId   String                @map("store_id")
+  productId String                @map("product_id")
+  type      InventoryMovementType
+  qty       Int
+  refType   String?               @map("ref_type")
+  refId     String?               @map("ref_id")
+  createdAt DateTime              @default(now()) @map("created_at")
+
+  store   Store   @relation(fields: [storeId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([storeId, productId])
+  @@index([createdAt])
+  @@map("inventory_movements")
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  storeId        String        @map("store_id")
+  workerId       String        @map("worker_id")
+  totalAmount    Decimal       @map("total_amount") @db.Decimal(10, 2)
+  totalItems     Int           @map("total_items")
+  status         InvoiceStatus @default(COMPLETED)
+  clientInvoiceRef String?     @map("client_invoice_ref")
+  pdfUrl         String?       @map("pdf_url")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  store      Store        @relation(fields: [storeId], references: [id])
+  items      InvoiceItem[]
+
+  @@index([storeId, createdAt])
+  @@index([createdAt])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id         String   @id @default(uuid())
+  invoiceId  String   @map("invoice_id")
+  productId  String   @map("product_id")
+  qty        Int
+  unitPrice  Decimal  @map("unit_price") @db.Decimal(10, 2)
+  lineTotal Decimal  @map("line_total") @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@map("invoice_items")
+}
+

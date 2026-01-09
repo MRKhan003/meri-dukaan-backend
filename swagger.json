@@ -1,0 +1,1275 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Meri Dukaan POS + Admin Analytics API",
+    "version": "1.0.0",
+    "description": "Complete API documentation for Meri Dukaan Point of Sale system with Admin Analytics",
+    "contact": {
+      "name": "API Support",
+      "email": "support@meridukaan.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.meridukaan.com",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication endpoints"
+    },
+    {
+      "name": "POS",
+      "description": "Point of Sale operations"
+    },
+    {
+      "name": "Admin",
+      "description": "Admin analytics and dashboard endpoints"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from /auth/login"
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "sales1@meridukaan.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "password123"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["ADMIN", "SALES", "INVENTORY", "PURCHASE"]
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "ScanRequest": {
+        "type": "object",
+        "required": ["storeId", "qrValue"],
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "4158f662-9e15-42ef-9c4e-345b9465693c"
+          },
+          "qrValue": {
+            "type": "string",
+            "example": "COKE-330ML"
+          }
+        }
+      },
+      "ScanResponse": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          },
+          "stockQty": {
+            "type": "integer",
+            "example": 50
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string",
+            "example": "COKE-330ML"
+          },
+          "name": {
+            "type": "string",
+            "example": "Coca-Cola 330ml"
+          },
+          "unitPrice": {
+            "type": "string",
+            "example": "35.00"
+          },
+          "category": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "Beverages"
+              }
+            }
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "Coca-Cola"
+              }
+            }
+          }
+        }
+      },
+      "InvoiceItemRequest": {
+        "type": "object",
+        "required": ["productId", "qty"],
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "qty": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 5
+          }
+        }
+      },
+      "CreateInvoiceRequest": {
+        "type": "object",
+        "required": ["storeId", "workerId", "items"],
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "4158f662-9e15-42ef-9c4e-345b9465693c"
+          },
+          "workerId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Must be a SALES user ID",
+            "example": "e8e79c5a-016d-49ef-9186-7eb34583762e"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceItemRequest"
+            },
+            "minItems": 1
+          },
+          "clientInvoiceRef": {
+            "type": "string",
+            "description": "Optional client reference",
+            "example": "INV-2026-001"
+          }
+        }
+      },
+      "InvoiceItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "qty": {
+            "type": "integer"
+          },
+          "unitPrice": {
+            "type": "string",
+            "example": "35.00"
+          },
+          "lineTotal": {
+            "type": "string",
+            "example": "175.00"
+          },
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          }
+        }
+      },
+      "Invoice": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "totalAmount": {
+            "type": "string",
+            "example": "175.00"
+          },
+          "totalItems": {
+            "type": "integer",
+            "example": 5
+          },
+          "status": {
+            "type": "string",
+            "enum": ["COMPLETED", "CANCELLED"],
+            "example": "COMPLETED"
+          },
+          "pdfUrl": {
+            "type": "string",
+            "example": "/storage/invoices/invoice-uuid.pdf"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceItem"
+            }
+          }
+        }
+      },
+      "FiltersResponse": {
+        "type": "object",
+        "properties": {
+          "regions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Punjab", "Sindh", "Islamabad Capital Territory"]
+          },
+          "cities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Lahore", "Karachi", "Islamabad"]
+          },
+          "stores": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "parentId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "manufacturers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "brands": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "manufacturerId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "manufacturerName": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AnalyticsSummary": {
+        "type": "object",
+        "properties": {
+          "salesValue": {
+            "type": "string",
+            "example": "50000.00"
+          },
+          "salesVolume": {
+            "type": "integer",
+            "example": 150
+          },
+          "distribution": {
+            "type": "number",
+            "example": 75.5
+          },
+          "weightedDistribution": {
+            "type": "number",
+            "example": 75.5
+          },
+          "shareInShops": {
+            "type": "number",
+            "example": 60.0
+          },
+          "avgPricePerLitre": {
+            "type": "string",
+            "example": "45.50"
+          },
+          "avgPricePerSKU": {
+            "type": "string",
+            "example": "333.33"
+          }
+        }
+      },
+      "SalesTrend": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "enum": ["daily", "weekly"],
+            "example": "daily"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2026-01-09"
+                },
+                "salesValue": {
+                  "type": "string",
+                  "example": "5000.00"
+                },
+                "salesVolume": {
+                  "type": "integer",
+                  "example": 25
+                }
+              }
+            }
+          }
+        }
+      },
+      "BrandDistribution": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "brandId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "brandName": {
+                  "type": "string"
+                },
+                "salesValue": {
+                  "type": "string"
+                },
+                "salesVolume": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MarketShare": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": ["value", "volume"],
+            "example": "value"
+          },
+          "slices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number",
+                  "description": "Percentage",
+                  "example": 45.5
+                }
+              }
+            }
+          }
+        }
+      },
+      "BrandsList": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "brandId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "brandName": {
+                  "type": "string"
+                },
+                "salesValue": {
+                  "type": "string"
+                },
+                "shareValue": {
+                  "type": "string"
+                },
+                "avgPrice": {
+                  "type": "string"
+                },
+                "avgPricePerLitre": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer"
+              },
+              "pageSize": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              },
+              "totalPages": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "TopSKUs": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "brandName": {
+                  "type": "string"
+                },
+                "salesValue": {
+                  "type": "string"
+                },
+                "salesVolume": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "example": 400
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "path": {
+            "type": "string",
+            "example": "/pos/invoices"
+          },
+          "method": {
+            "type": "string",
+            "example": "POST"
+          },
+          "message": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User login",
+        "description": "Authenticate user and receive JWT token",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pos/scan": {
+      "post": {
+        "tags": ["POS"],
+        "summary": "Scan product QR code",
+        "description": "Scan QR code (SKU) and get product details with available stock",
+        "operationId": "scanProduct",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pos/invoices": {
+      "post": {
+        "tags": ["POS"],
+        "summary": "Create invoice",
+        "description": "Create a new invoice with items. This is a transactional operation that:\n- Validates store and worker\n- Locks inventory\n- Checks stock availability\n- Creates invoice and items\n- Updates inventory\n- Generates PDF\n- Emits WebSocket events",
+        "operationId": "createInvoice",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoiceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invoice created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pos/invoices/{id}": {
+      "get": {
+        "tags": ["POS"],
+        "summary": "Get invoice details",
+        "description": "Retrieve full invoice details including all items",
+        "operationId": "getInvoice",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Invoice ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invoice found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invoice not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pos/invoices/{id}/pdf": {
+      "get": {
+        "tags": ["POS"],
+        "summary": "Get invoice PDF",
+        "description": "Download invoice PDF file",
+        "operationId": "getInvoicePdf",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Invoice ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF file",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PDF not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/filters": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get filter options",
+        "description": "Get all available filter options for admin dashboard (stores, regions, cities, brands, etc.)",
+        "operationId": "getFilters",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filter options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiltersResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Admin role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/analytics/summary": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get dashboard summary",
+        "description": "Get summary metrics for admin dashboard (total sales, invoices, AOV, etc.)",
+        "operationId": "getSummary",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-01-01"
+            },
+            "description": "Start date (YYYY-MM-DD)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-12-31"
+            },
+            "description": "End date (YYYY-MM-DD)"
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by store ID (optional)"
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by region (optional)"
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by city (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Summary metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/analytics/sales-trend": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get sales trend",
+        "description": "Get sales trend data for line chart (daily or weekly buckets)",
+        "operationId": "getSalesTrend",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "bucket",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["daily", "weekly"],
+              "default": "daily"
+            },
+            "description": "Time bucket for grouping"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sales trend data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesTrend"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/analytics/brand-distribution": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get brand distribution",
+        "description": "Get brand distribution data for pie chart",
+        "operationId": "getBrandDistribution",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Brand distribution data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDistribution"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/analytics/market-share": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get market share",
+        "description": "Get market share data by brand or manufacturer",
+        "operationId": "getMarketShare",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["value", "volume"],
+              "default": "value"
+            },
+            "description": "Metric type: value (sales amount) or volume (quantity)"
+          },
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by brand (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Market share data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketShare"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/analytics/brands": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get brands list",
+        "description": "Get brands list with sales data (paginated)",
+        "operationId": "getBrands",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "salesValue"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Brands list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandsList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/analytics/top-skus": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get top SKUs",
+        "description": "Get top selling SKUs (products)",
+        "operationId": "getTopSkus",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Number of top SKUs to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top SKUs list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopSKUs"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
