@@ -2,7 +2,7 @@
 
 A complete Point of Sale (POS) system with Admin Analytics built with NestJS, PostgreSQL, and Prisma.
 
-## 🚀 Features
+## Features
 
 - **POS System**: QR code scanning, cart management, invoice generation
 - **Inventory Management**: Real-time stock updates with movement audit
@@ -12,13 +12,13 @@ A complete Point of Sale (POS) system with Admin Analytics built with NestJS, Po
 - **Role-Based Access Control**: ADMIN, SALES, INVENTORY, PURCHASE roles
 - **JWT Authentication**: Secure API access
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Node.js 20+ 
 - PostgreSQL 15+
 - npm or yarn
 
-## 🛠️ Installation
+## Installation
 
 ### 1. Clone the repository
 ```bash
@@ -63,7 +63,7 @@ npm run start:dev
 
 Server will run on `http://localhost:3001`
 
-## 📚 API Documentation
+## API Documentation
 
 ### Authentication
 - `POST /auth/login` - Login and get JWT token
@@ -83,7 +83,7 @@ Server will run on `http://localhost:3001`
 - `GET /admin/analytics/brands` - Brand list
 - `GET /admin/analytics/top-skus` - Top SKUs
 
-## 🔐 Default Users
+## Default Users
 
 All users have password: `password123`
 
@@ -93,7 +93,7 @@ All users have password: `password123`
 - **Inventory**: `inventory@meridukaan.com` (INVENTORY role)
 - **Purchase**: `purchase@meridukaan.com` (PURCHASE role)
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 src/
@@ -105,7 +105,7 @@ src/
 └── common/         # Shared utilities
 ```
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Unit tests
@@ -118,7 +118,7 @@ npm run test:e2e
 npm run test:cov
 ```
 
-## 🐳 Docker Support
+## Docker Support
 
 ```bash
 # Start with Docker Compose
@@ -128,7 +128,7 @@ docker-compose up -d
 docker-compose down
 ```
 
-## 📝 Available Scripts
+## Available Scripts
 
 - `npm run start:dev` - Start development server
 - `npm run build` - Build for production
@@ -137,7 +137,7 @@ docker-compose down
 - `npm run prisma:migrate` - Run database migrations
 - `npm run prisma:seed` - Seed database
 
-## 🔌 WebSocket
+## WebSocket
 
 WebSocket namespace: `/ws`
 
@@ -145,15 +145,15 @@ Events:
 - `invoice.created` - Emitted when invoice is created
 - `inventory.updated` - Emitted when inventory is updated
 
-## 📄 License
+## License
 
 MIT
 
-## 👥 Contributors
+## Contributors
 
 Your name here
 
-## 📞 Support
+## Support
 
 For issues and questions, please open an issue on GitHub.
 
