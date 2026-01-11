@@ -2,7 +2,7 @@
 # Updated: Force fresh build cache
 FROM node:20-alpine AS base
 
-# Install Chromium dependencies for Puppeteer
+# Install Chromium dependencies for Puppeteer and OpenSSL for Prisma
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -11,6 +11,7 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
+    openssl1.1-compat \
     && rm -rf /var/cache/apk/*
 
 # Set Puppeteer to use installed Chromium
