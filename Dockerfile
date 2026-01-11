@@ -11,7 +11,8 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
-    openssl1.1-compat \
+    openssl \
+    openssl-dev \
     && rm -rf /var/cache/apk/*
 
 # Set Puppeteer to use installed Chromium
