@@ -104,14 +104,20 @@ async function createServerlessApp(): Promise<express.Express> {
   return expressApp;
 }
 
-// Export handler for Vercel (CommonJS for compatibility)
-module.exports = async (req: express.Request, res: express.Response) => {
-  const app = await createServerlessApp();
-  return app(req, res);
+// Export handler for Vercel
+const handler = async (req: express.Request, res: express.Response) => {
+  try {
+    const app = await createServerlessApp();
+    return app(req, res);
+  } catch (error) {
+    console.error('Serverless handler error:', error);
+    res.status(500).json({ error: 'Internal server error', message: error.message });
+  }
 };
 
-// Also export as default for ES modules
-export default async (req: express.Request, res: express.Response) => {
-  const app = await createServerlessApp();
-  return app(req, res);
-};
+// CommonJS export (required for Vercel)
+module.exports = handler;
+module.exports.default = handler;
+
+// ES module export
+export default handler;
