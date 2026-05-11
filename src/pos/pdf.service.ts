@@ -4,7 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as puppeteer from 'puppeteer';
 import * as fs from 'fs';
 import * as path from 'path';
-
+import { os } from 'os';
+import { join } from 'path';
 @Injectable()
 export class PdfService {
   private readonly logger = new Logger(PdfService.name);
@@ -19,10 +20,15 @@ export class PdfService {
   }
 
   private ensureStorageDirectories() {
-    const invoicesDir = path.join(this.storagePath, 'invoices');
-    if (!fs.existsSync(invoicesDir)) {
-      fs.mkdirSync(invoicesDir, { recursive: true });
-    }
+    // const invoicesDir = path.join(this.storagePath, 'invoices');
+    // if (!fs.existsSync(invoicesDir)) {
+    //   fs.mkdirSync(invoicesDir, { recursive: true });
+    // }
+      const invoicesDir = join(os.tmpdir(), 'invoices');
+if (!fs.existsSync(invoicesDir)) {
+  fs.mkdirSync(invoicesDir, { recursive: true });
+}
+  
   }
 
   async generateInvoicePdf(invoiceId: string): Promise<string> {
